@@ -462,7 +462,9 @@ void GetFieldAtPoint(
 	const double r[2], // coordinates within layer
 	std::complex<double> efield[3],
 	std::complex<double> hfield[3],
-	std::complex<double> *work = NULL
+	std::complex<double> *work = NULL,
+	double* efieldByLevel = NULL,
+	double* hfieldByLevel = NULL
 );
 void GetFieldAtPointImproved(
 	size_t n, // glist.n

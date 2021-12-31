@@ -2888,7 +2888,11 @@ int Simulation_OutputLayerPatternRealization(Simulation *S, Layer *layer, int nx
 	S4_TRACE("< Simulation_OutputLayerPatternRealization\n");
 	return 0;
 }
-int Simulation_GetField(Simulation *S, const double r[3], double fE[6], double fH[6]){
+int Simulation_GetField(Simulation *S, const double r[3], double fE[6], double fH[6],
+	double** efieldByLevel,
+	double** hfieldByLevel,
+	int* numOfLevels
+ ){
 	S4_TRACE("> Simulation_GetField(S=%p, r=%p (%f,%f,%f), fE=%p, fH=%p)\n",
 		S, r, (NULL == r ? 0 : r[0]), (NULL == r ? 0 : r[1]), (NULL == r ? 0 : r[2]), fE, fH);
 	if(NULL == S){
@@ -2975,10 +2979,22 @@ int Simulation_GetField(Simulation *S, const double r[3], double fE[6], double f
             Lbands->q, Lbands->kp, Lbands->phi, Lbands->Epsilon_inv, P, W, Lbands->Epsilon2, epsilon, Lbands->epstype,
             ab, r, (NULL != fE ? efield : NULL) , (NULL != fH ? hfield : NULL), work);
     } else {
+		if (efieldByLevel != NULL) {
+			*efieldByLevel = (double *) malloc(sizeof(double) * S->n_G * 2 * 3);
+		}
+		
+		if (hfieldByLevel != NULL) {
+			*hfieldByLevel = (double *) malloc(sizeof(double) * S->n_G * 2 * 3);
+		}
+
+		if (numOfLevels != NULL) {
+			*numOfLevels = S->n_G; 
+		}
+
         GetFieldAtPoint(
             S->n_G, S->solution->kx, S->solution->ky, std::complex<double>(S->omega[0],S->omega[1]),
             Lbands->q, Lbands->kp, Lbands->phi, Lbands->Epsilon_inv, Lbands->epstype,
-            ab, r, (NULL != fE ? efield : NULL) , (NULL != fH ? hfield : NULL), work);
+            ab, r, (NULL != fE ? efield : NULL) , (NULL != fH ? hfield : NULL), work, hfieldByLevel != NULL ? *efieldByLevel : NULL, hfieldByLevel != NULL ? *hfieldByLevel : NULL);
     }
 	if(NULL != fE){
 		fE[0] = efield[0].real();

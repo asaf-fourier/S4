@@ -1159,7 +1159,9 @@ void GetFieldAtPoint(
 	const double r[2], // coordinates within layer
 	std::complex<double> efield[3],
 	std::complex<double> hfield[3],
-	std::complex<double> *work // 8*n2
+	std::complex<double> *work, // 8*n2
+	double* efieldByLevel,
+	double* hfieldByLevel
 ){
     // This is just a way of instantiating 1 with a complex number type, and 0
     // with a complex number type, which I think is necessary for type
@@ -1229,6 +1231,28 @@ void GetFieldAtPoint(
 		const double theta = (kx[i]*r[0] + ky[i]*r[1]);
         // This is using Euler's rule to compute e^{i (\vec{k} + \vec{G}) \cdot \vec{x})
 		const std::complex<double> phase(cos(theta),sin(theta));
+
+		if (efieldByLevel != NULL) {
+			const std::complex<double> efieldForLevel[3] = { ex[i]*phase, ney[i]*phase, eh[n+i] * (phase / omega) };		
+			*(efieldByLevel + 0 + i * 6) = efieldForLevel[0].real();
+			*(efieldByLevel + 1 + i * 6) = efieldForLevel[0].imag();
+			*(efieldByLevel + 2 + i * 6) = efieldForLevel[1].real();
+			*(efieldByLevel + 3 + i * 6) = efieldForLevel[1].imag();
+			*(efieldByLevel + 4 + i * 6) = efieldForLevel[2].real();
+			*(efieldByLevel + 5 + i * 6) = efieldForLevel[2].imag();
+		}
+		
+		if (hfieldByLevel != NULL) {
+			const std::complex<double> hfieldForLevel[3] = { hx[i]*phase, hy[i]*phase, (kx[i] * -ney[i] - ky[i] * ex[i]) * (phase / omega) };
+			
+			*(hfieldByLevel + 0 + i * 6) = hfieldForLevel[0].real();
+			*(hfieldByLevel + 1 + i * 6) = hfieldForLevel[0].imag();
+			*(hfieldByLevel + 2 + i * 6) = hfieldForLevel[1].real();
+			*(hfieldByLevel + 3 + i * 6) = hfieldForLevel[1].imag();
+			*(hfieldByLevel + 4 + i * 6) = hfieldForLevel[2].real();
+			*(hfieldByLevel + 5 + i * 6) = hfieldForLevel[2].imag();
+		}
+		
         // And this is just where each individual term is added to the total
 		fH[0] += hx[i]*phase;
 		fH[1] += hy[i]*phase;
