@@ -1233,7 +1233,7 @@ void GetFieldAtPoint(
 		const std::complex<double> phase(cos(theta),sin(theta));
 
 		if (efieldByLevel != NULL) {
-			const std::complex<double> efieldForLevel[3] = { ex[i]*phase, ney[i]*phase, eh[n+i] * (phase / omega) };		
+			const std::complex<double> efieldForLevel[3] = { ex[i], -ney[i], eh[n+i] / omega };
 			*(efieldByLevel + 0 + i * 6) = efieldForLevel[0].real();
 			*(efieldByLevel + 1 + i * 6) = efieldForLevel[0].imag();
 			*(efieldByLevel + 2 + i * 6) = efieldForLevel[1].real();
@@ -1243,7 +1243,7 @@ void GetFieldAtPoint(
 		}
 		
 		if (hfieldByLevel != NULL) {
-			const std::complex<double> hfieldForLevel[3] = { hx[i]*phase, hy[i]*phase, (kx[i] * -ney[i] - ky[i] * ex[i]) * (phase / omega) };
+			const std::complex<double> hfieldForLevel[3] = { hx[i], hy[i], (kx[i] * -ney[i] - ky[i] * ex[i]) / omega };
 			
 			*(hfieldByLevel + 0 + i * 6) = hfieldForLevel[0].real();
 			*(hfieldByLevel + 1 + i * 6) = hfieldForLevel[0].imag();
