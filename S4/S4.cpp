@@ -2226,6 +2226,40 @@ int Simulation_GetPropagationConstants(Simulation *S, Layer *L, double *q){
 	return ret;
 }
 
+int Simulation_GetParameters(Simulation *S, double *kx, double *ky, double *omega){
+	S4_TRACE("> Simulation_GetParameters(S=%p) [omega=%f]\n", S);
+	int ret = 0;
+
+	if(NULL == S){ ret = -1; }
+	if(0 != ret){
+		S4_TRACE("< Simulation_GetAmplitudes (failed; ret = %d) \n", ret);
+		return ret;
+	}
+
+    const int n = S->n_G;
+	double *kx_s = S->solution->kx;
+	double *ky_s = S->solution->ky;
+
+    if(NULL != kx){
+		for(int i = 0; i < n; ++i){
+			kx[i] = kx_s[i];
+		}
+	}
+
+    if(NULL != ky){
+		for(int i = 0; i < n; ++i){
+			ky[i] = ky_s[i];
+		}
+	}
+
+    if(NULL != omega){
+		omega[0] = S->omega[0];
+		omega[1] = S->omega[1];
+	}
+
+    return ret;
+}
+
 int Simulation_GetAmplitudes(Simulation *S, Layer *layer, double offset, double *forw, double *back){
 	S4_TRACE("> Simulation_GetAmplitudes(S=%p, layer=%p, offset=%f, forw=%p, back=%p) [omega=%f]\n",
 		S, layer, offset, forw, back, S->omega[0]);

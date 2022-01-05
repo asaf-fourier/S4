@@ -360,6 +360,10 @@ int Simulation_GetPoyntingFluxByG(Simulation *S, Layer *layer, double offset, do
 // q should be length 2*S->n_G
 int Simulation_GetPropagationConstants(Simulation *S, Layer *layer, double *q);
 
+// Returns Kx and Ky as vectors, and omega
+int Simulation_GetParameters(Simulation *S, double *kx, double *ky, double *omega);
+
+
 // Returns lists of 2*S->n_G complex numbers of forward and backward amplitudes
 // forw and back should each be length 4*S->n_G
 int Simulation_GetAmplitudes(Simulation *S, Layer *layer, double offset, double *forw, double *back);

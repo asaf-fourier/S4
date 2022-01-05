@@ -1059,6 +1059,39 @@ static PyObject *S4Sim_GetEpsilon(S4Sim *self, PyObject *args){
 	return PyComplex_FromDoubles(feps[0], feps[1]);
 }
 
+static PyObject *S4Sim_GetSimulationDetails(S4Sim *self, PyObject *args){
+	int ret, i, n;
+    PyObject *out, *kx_py, *ky_py;
+
+	n = self->S.n_G;
+
+	double *kx = (double*)malloc(sizeof(double)*n);
+	double *ky = (double*)malloc(sizeof(double)*n);
+    double *omega = (double*)malloc(sizeof(double)*2);
+
+    ret = Simulation_GetParameters(&(self->S), kx, ky, omega);
+
+	kx_py = PyList_New(n);
+	ky_py = PyList_New(n);
+
+    for(i = 0; i < n; ++i){
+        PyList_SetItem(kx_py, i, PyFloat_FromDouble(kx[i]));
+        PyList_SetItem(ky_py, i, PyFloat_FromDouble(ky[i]));
+    }
+
+    out = PyTuple_Pack(3,
+				kx_py,
+				ky_py,
+				PyComplex_FromDoubles(omega[0], omega[1])
+			);
+
+    free(kx);
+    free(ky);
+    free(omega);
+
+    return out;
+}
+
 static PyObject *S4Sim_OutputLayerPatternRealization(S4Sim *self, PyObject *args, PyObject *kwds)
 {
 	static char *kwlist[] = { "Layer", "Nu", "Nv", "Filename", NULL };
@@ -2020,6 +2053,7 @@ static PyMethodDef S4Sim_methods[] = {
 	/* Outputs requiring no solutions */
 	{"GetReciprocalLattice"		, (PyCFunction)S4Sim_GetReciprocalLattice, METH_NOARGS, PyDoc_STR("GetReciprocalLattice() -> ((px,py),(qx,qy))")},
 	{"GetEpsilon"				, (PyCFunction)S4Sim_GetEpsilon, METH_VARARGS, PyDoc_STR("GetEpsilon(x,y,z) -> Complex")},
+	{"GetSimulationDetails"		, (PyCFunction)S4Sim_GetSimulationDetails, METH_NOARGS, PyDoc_STR("GetSimulationDetails() -> Tuple")},
 	{"OutputLayerPatternPostscript", (PyCFunction)S4Sim_OutputLayerPatternPostscript, METH_VARARGS | METH_KEYWORDS, PyDoc_STR("OutputLayerPatternPostscript(layer,filename) -> None")},
 	{"OutputLayerPatternRealization", (PyCFunction)S4Sim_OutputLayerPatternRealization, METH_VARARGS | METH_KEYWORDS, PyDoc_STR("OutputLayerPatternRealization(layer, nu, nv, filename) -> None")},
 	/* Outputs requiring solutions */
