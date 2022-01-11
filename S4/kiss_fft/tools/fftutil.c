@@ -148,7 +148,7 @@ int get_dims(char * arg,int * dims)
     return ndims;
 }
 
-int main(int argc,char ** argv)
+/*int main(int argc,char ** argv)
 {
     int isinverse=0;
     int isreal=0;
@@ -156,7 +156,7 @@ int main(int argc,char ** argv)
     FILE *fout=stdout;
     int ndims=1;
     int dims[32];
-    dims[0] = 1024; /*default fft size*/
+    dims[0] = 1024; 
 
     while (1) {
         int c=getopt(argc,argv,"n:iR");
@@ -205,4 +205,4 @@ int main(int argc,char ** argv)
     if (fin!=stdin) fclose(fin);
 
     return 0;
-}
+}*/

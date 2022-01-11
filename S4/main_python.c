@@ -1518,6 +1518,64 @@ static PyObject *S4Sim_GetFieldsByLevel(S4Sim *self, PyObject *args, PyObject *k
 	return obj;
 }
 
+static PyObject *S4Sim_GetFieldsByLayerName(S4Sim *self, PyObject *args, PyObject *kwds){
+	int ret;
+	PyObject* obj;
+	PyObject* objH;
+	PyObject* objE;
+	double fE[6],fH[6];
+
+	double* efieldByLevel = NULL;
+	double* hfieldByLevel = NULL;
+	const char* layername;
+	int numOfLevels = 0;
+
+	static char* kwlist[] = { "Layer", NULL };
+    	
+  	if (!PyArg_ParseTupleAndKeywords(args, kwds, "s:GetFields", kwlist, &layername)) {
+    	return NULL;
+  	}
+
+	if(NULL == Simulation_GetLayerByName(&(self->S), layername, NULL)){
+		PyErr_Format(PyExc_RuntimeError, "GetFieldsByLayerName: Layer named '%s' not found.", layername);
+		return NULL;
+	}
+
+	ret = Simulation_GetFieldByLayerName(&(self->S), layername, fE, fH, &efieldByLevel, &hfieldByLevel, &numOfLevels);
+	if(0 != ret){
+		HandleSolutionErrorCode("GetFields", ret);
+		return NULL;
+	}
+	
+	obj = PyList_New(2); 
+	objE = PyList_New(numOfLevels); 
+	objH = PyList_New(numOfLevels); 
+	
+	for(int i = 0; i < numOfLevels; i++) { 
+		PyList_SetItem(objE, i, 
+			PyTuple_Pack(3,
+				PyComplex_FromDoubles(*(efieldByLevel + 0 + i * 6), *(efieldByLevel + 1 + i * 6)),
+				PyComplex_FromDoubles(*(efieldByLevel + 2 + i * 6), *(efieldByLevel+ 3 + i * 6)),
+				PyComplex_FromDoubles(*(efieldByLevel + 4 + i * 6), *(efieldByLevel + 5 + i * 6))
+			));
+		
+		PyList_SetItem(objH, i,
+			PyTuple_Pack(3,
+				PyComplex_FromDoubles(*(hfieldByLevel + 0 + i * 6), *(hfieldByLevel + 1 + i * 6)),
+				PyComplex_FromDoubles(*(hfieldByLevel + 2 + i * 6), *(hfieldByLevel + 3 + i * 6)),
+				PyComplex_FromDoubles(*(hfieldByLevel + 4 + i * 6), *(hfieldByLevel + 5 + i * 6))
+			));
+	}
+
+	PyList_SetItem(obj, 0, objE);
+	PyList_SetItem(obj, 1, objH);
+
+	free(efieldByLevel);
+	free(hfieldByLevel);
+	
+	return obj;
+}
+
 static PyObject *S4Sim_GetFieldsOnGridNumpy(S4Sim *self, PyObject *args, PyObject *kwds)
 {
   static char* kwlist[] = { "z", "NumSamples", NULL };
@@ -2072,6 +2130,7 @@ static PyMethodDef S4Sim_methods[] = {
 	*/
 	{"GetFields"				, (PyCFunction)S4Sim_GetFields, METH_VARARGS, PyDoc_STR("GetFields(x,y,z) -> (Tuple,Tuple)")},
 	{"GetFieldsByLevel"			, (PyCFunction)S4Sim_GetFieldsByLevel, METH_VARARGS, PyDoc_STR("GetFields(x,y,z) -> List")},
+	{"GetFieldsByLayerName"		, (PyCFunction)S4Sim_GetFieldsByLayerName, METH_VARARGS | METH_KEYWORDS, PyDoc_STR("GetFieldsByLayerName(layerName) -> List")},
 	{"GetFieldsOnGrid"			, (PyCFunction)S4Sim_GetFieldsOnGrid, METH_VARARGS | METH_KEYWORDS, PyDoc_STR("GetFieldsOnGrid(z,nsamples,format,filename) -> Tuple")},
 	{"GetFieldsOnGridNumpy"	    , (PyCFunction)S4Sim_GetFieldsOnGridNumpy, METH_VARARGS | METH_KEYWORDS, PyDoc_STR("GetFieldsOnGrid(z,nsamples) -> np.ndarray")},
 	{"GetSMatrixDeterminant"	, (PyCFunction)S4Sim_GetSMatrixDeterminant, METH_NOARGS, PyDoc_STR("GetSMatrixDeterminant() -> Tuple")},

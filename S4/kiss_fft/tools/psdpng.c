@@ -221,7 +221,7 @@ void make_png(void)
 
 }
 
-int main(int argc,char ** argv)
+/*int main(int argc,char ** argv)
 {
     config(argc,argv);
 
@@ -232,4 +232,4 @@ int main(int argc,char ** argv)
     if (fout!=stdout) fclose(fout);
     if (fin!=stdin) fclose(fin);
     return 0;
-}
+}*/

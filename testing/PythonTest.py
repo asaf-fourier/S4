@@ -100,13 +100,15 @@ Ey = np.zeros((X.shape[0], X.shape[1]))
 xc = 0
 zc = 0
 
+print(S.GetFieldsByLayerName(Layer = 'Glass_Below'))
+
 for x in x_space:
     zc=0
     #print('x='+str(x)+'\n')
     for z in z_space:
         #print('z='+str(z)+'\tzc='+str(zc)+'\n')
         E,H = S.GetFields(x,0,z)
-        print(S.GetFieldsByLevel(x, 0, z))
+        #print(S.GetFieldsByLevel(x, 0, z))
         Ey[zc,xc] = np.abs(H[1]) ** 2 + np.abs(H[2]) ** 2 + np.abs(H[0]) ** 2
         #print(str(x)+'\t'+str(z)+'\t'+str(abs(E[1])))
         zc += 1

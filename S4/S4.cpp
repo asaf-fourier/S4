@@ -3051,6 +3051,142 @@ int Simulation_GetField(Simulation *S, const double r[3], double fE[6], double f
 	S4_TRACE("< Simulation_GetField\n");
 	return 0;
 }
+
+
+int Simulation_GetFieldByLayerName(Simulation *S, const char* layerName, double fE[6], double fH[6],
+    double** efieldByLevel,
+    double** hfieldByLevel,
+    int* numOfLevels
+ ){
+    S4_TRACE("> Simulation_GetField(S=%p, r=%p (%f,%f,%f), fE=%p, fH=%p)\n",
+        S, r, (NULL == r ? 0 : r[0]), (NULL == r ? 0 : r[1]), (NULL == r ? 0 : r[2]), fE, fH);
+    if(NULL == S){
+        S4_TRACE("< Simulation_GetField (failed; S == NULL)\n");
+        return -1;
+    }
+    
+    if(NULL == fE && NULL == fH){
+        S4_TRACE("< Simulation_GetField (early exit; fE and fH are NULL)\n");
+        return 0;
+    }
+
+    
+    const size_t n2 = 2*S->n_G;
+    const size_t n4 = 2*n2;
+    
+    Layer *L = S->layer;
+    double dz = 0;
+    double z = 0;
+    {
+        
+        while(NULL != L && /*r[2] > z+L->thickness*/strcmp(layerName, L->name) != 0){
+            z += L->thickness;
+            dz -= L->thickness;
+            if(NULL == L->next){ break; }
+            L = L->next;
+        }
+    }
+    
+    const double r[3] = {0, 0, z + L->thickness / 2};
+    dz = r[2] - dz;
+    
+    if(NULL == L){
+        S4_TRACE("< Simulation_GetField (failed; no layers found)\n");
+        return 14;
+    }
+//fprintf(stderr, "(%f,%f,%f) in %s: dz = %f\n", r[0], r[1], r[2], L->name, dz);
+
+    LayerBands *Lbands;
+    LayerSolution *Lsoln;
+    int ret = Simulation_GetLayerSolution(S, L, &Lbands, &Lsoln);
+    if(0 != ret){
+        S4_TRACE("< Simulation_GetField (failed; Simulation_GetLayerSolution returned %d)\n", ret);
+        return ret;
+    }
+
+    std::complex<double> *ab = (std::complex<double>*)S4_malloc(sizeof(std::complex<double>) * (n4+8*n2));
+    if(NULL == ab){
+        S4_TRACE("< Simulation_GetField (failed; allocation failed)\n");
+        return 1;
+    }
+    std::complex<double> *work = ab + n4;
+
+    memcpy(ab, Lsoln->ab, sizeof(std::complex<double>) * n4);
+    //RNP::TBLAS::Copy(n4, Lsoln->ab,1, ab,1);
+    //RNP::IO::PrintVector(n4, ab, 1);
+    TranslateAmplitudes(S->n_G, Lbands->q, L->thickness, dz, ab);
+    std::complex<double> efield[3], hfield[3];
+    std::complex<double> *P = NULL;
+    std::complex<double> *W = NULL;
+    std::complex<double> epsilon = 0;
+    if(S->options.use_weismann_formulation > 0) {
+        // I need to jump in right here and do a few thing
+        P = Simulation_GetCachedField((const Simulation *)S, (const Layer *)L);
+        W = Simulation_GetCachedW((const Simulation *)S, (const Layer *)L);
+        const double xy[2] = {r[0], r[1]};
+        const Material *M;
+        int shape_index;
+        int result  = Pattern_GetShape(&(L->pattern), xy, &shape_index, NULL);
+        if (result == 0) {
+            M = Simulation_GetMaterialByIndex(S, L->pattern.shapes[shape_index].tag);
+        } else {
+            M = Simulation_GetMaterialByName(S, L->material, NULL);
+        }
+        // If M.type = 0 then epsilon is a scalar, if M.type = 1 epsilon is a
+        // tensor. IDK what to do with a tensor epsilon
+        if(0 != M->type){
+            return -1;
+        }
+        epsilon = std::complex<double>(M->eps.s[0], M->eps.s[1]);
+    }
+    if(P != NULL && W != NULL){
+        S4_VERB(1, "Using Weismann Formulation\n");
+        S4_TRACE("Using Weismann Formulation\n");
+        GetFieldAtPointImproved(
+            S->n_G, S->solution->kx, S->solution->ky, std::complex<double>(S->omega[0],S->omega[1]),
+            Lbands->q, Lbands->kp, Lbands->phi, Lbands->Epsilon_inv, P, W, Lbands->Epsilon2, epsilon, Lbands->epstype,
+            ab, r, (NULL != fE ? efield : NULL) , (NULL != fH ? hfield : NULL), work);
+    } else {
+        if (efieldByLevel != NULL) {
+            *efieldByLevel = (double *) malloc(sizeof(double) * S->n_G * 2 * 3);
+        }
+        
+        if (hfieldByLevel != NULL) {
+            *hfieldByLevel = (double *) malloc(sizeof(double) * S->n_G * 2 * 3);
+        }
+
+        if (numOfLevels != NULL) {
+            *numOfLevels = S->n_G;
+        }
+
+        GetFieldAtPoint(
+            S->n_G, S->solution->kx, S->solution->ky, std::complex<double>(S->omega[0],S->omega[1]),
+            Lbands->q, Lbands->kp, Lbands->phi, Lbands->Epsilon_inv, Lbands->epstype,
+            ab, r, (NULL != fE ? efield : NULL) , (NULL != fH ? hfield : NULL), work, hfieldByLevel != NULL ? *efieldByLevel : NULL, hfieldByLevel != NULL ? *hfieldByLevel : NULL);
+    }
+    if(NULL != fE){
+        fE[0] = efield[0].real();
+        fE[1] = efield[1].real();
+        fE[2] = efield[2].real();
+        fE[3] = efield[0].imag();
+        fE[4] = efield[1].imag();
+        fE[5] = efield[2].imag();
+    }
+    if(NULL != fH){
+        fH[0] = hfield[0].real();
+        fH[1] = hfield[1].real();
+        fH[2] = hfield[2].real();
+        fH[3] = hfield[0].imag();
+        fH[4] = hfield[1].imag();
+        fH[5] = hfield[2].imag();
+    }
+    S4_free(ab);
+
+    S4_TRACE("< Simulation_GetField\n");
+    return 0;
+}
+
+
 int Simulation_GetFieldPlane(Simulation *S, int nxy[2], double zz, double *E, double *H){
 	S4_TRACE("> Simulation_GetFieldPlane(S=%p, nxy=%p (%d,%d), z=%f, E=%p, H=%p)\n",
 		S, (NULL == nxy ? 0 : nxy[0]), (NULL == nxy ? 0 : nxy[1]), zz, E, H);
@@ -3106,7 +3242,7 @@ int Simulation_GetFieldPlane(Simulation *S, int nxy[2], double zz, double *E, do
 	//RNP::TBLAS::Copy(n4, Lsoln->ab,1, ab,1);
 	//RNP::IO::PrintVector(n4, ab, 1);
 	TranslateAmplitudes(S->n_G, Lbands->q, L->thickness, dz, ab);
-	size_t snxy[2] = { nxy[0], nxy[1] };
+    size_t snxy[2] = { static_cast<size_t>(nxy[0]), static_cast<size_t>(nxy[1]) };
     std::complex<double> *P = NULL;
     std::complex<double> *W = NULL;
     std::complex<double> *epsilon = NULL;

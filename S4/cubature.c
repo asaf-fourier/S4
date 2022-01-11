@@ -1277,7 +1277,7 @@ static double exact_integral(int which, unsigned dim, const double *xmax) {
 }
 
 #include <ctype.h>
-int main(int argc, char **argv)
+/*int main(int argc, char **argv)
 {
      double *xmin, *xmax;
      double tol, *val, *err;
@@ -1293,11 +1293,11 @@ int main(int argc, char **argv)
      tol = argc > 2 ? atof(argv[2]) : 1e-2;
      maxEval = argc > 4 ? atoi(argv[4]) : 0;
      
-     /* parse: e.g. "x/y/z" is treated as fdim = 3, which_integrand={x,y,z} */
+     
      if (argc <= 3) {
 	  integrand_fdim = 1;
 	  which_integrand = (int *) malloc(sizeof(int) * integrand_fdim);
-	  which_integrand[0] = 0; /* default */
+	  which_integrand[0] = 0;
      }
      else {
 	  unsigned j = 0;
@@ -1349,6 +1349,6 @@ int main(int argc, char **argv)
      free(which_integrand);
 
      return EXIT_SUCCESS;
-}
+}*/
 
 #endif

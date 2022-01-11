@@ -90,7 +90,7 @@ static void check(int nc)
     }
 }
 
-int main(void)
+/*int main(void)
 {
     kiss_fft_cpx buf1[1024],buf2[1024];
     memset(buf1,0,sizeof(buf1));
@@ -104,5 +104,5 @@ int main(void)
     kfc_cleanup();
     check(0);
     return 0;
-}
+}*/
 #endif

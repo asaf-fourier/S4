@@ -397,6 +397,12 @@ int Simulation_GetField(Simulation *S, const double r[3], double fE[6], double f
 	double ** efieldByLevel,
 	double ** hfieldByLevel,
 	int* numOfLevels);
+
+int Simulation_GetFieldByLayerName(Simulation *S, const char* layerName, double fE[6], double fH[6],
+    double ** efieldByLevel,
+    double ** hfieldByLevel,
+    int* numOfLevels);
+
 int Simulation_GetFieldPlane(Simulation *S, int nxy[2], double z, double *E, double *H);
 
 // Returns a solution error code
