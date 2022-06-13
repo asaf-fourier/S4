@@ -1313,10 +1313,26 @@ static PyObject *S4Sim_GetPowerFlux(S4Sim *self, PyObject *args, PyObject *kwds)
 		return NULL;
 	}
 
-	return PyTuple_Pack(2,
+        Py_complex *p1 = PyComplex_FromDoubles(power[0], power[2]);
+        Py_complex *p2 = PyComplex_FromDoubles(power[1], power[3]);
+        PyObject *pack =    PyTuple_Pack(2,  p1,p2);
+
+/*
 		PyComplex_FromDoubles(power[0], power[2]),
 		PyComplex_FromDoubles(power[1], power[3])
 	);
+        */
+
+        Py_DECREF(p1);
+        Py_DECREF(p2);
+
+	return pack;
+        /*
+        PyTuple_Pack(2,
+		PyComplex_FromDoubles(power[0], power[2]),
+		PyComplex_FromDoubles(power[1], power[3])
+	);
+        */
 }
 static PyObject *S4Sim_GetPowerFluxByOrder(S4Sim *self, PyObject *args, PyObject *kwds){
 	int ret, n, i;
@@ -1343,6 +1359,21 @@ static PyObject *S4Sim_GetPowerFluxByOrder(S4Sim *self, PyObject *args, PyObject
 		return NULL;
 	}
 
+        //UK, 09JUN2022
+        //decreasing reference decreases the memory consumption
+        //compared to the anonymous implementation
+        rv = PyTuple_New(n);
+	for(i = 0; i < n; ++i){
+                Py_complex *p1 =     PyComplex_FromDoubles(power[4*i+0], power[4*i+2]);
+                Py_complex *p2 =     PyComplex_FromDoubles(power[4*i+1], power[4*i+3]);
+		PyTuple_SetItem(rv, i,  PyTuple_Pack(2, p1,  p2 )  );
+                Py_DECREF(p1);
+                Py_DECREF(p2);
+	}
+
+        /*
+        //UK - 09JUN2022
+        //original but more leaking implementation (On Ubuntu)
 	rv = PyTuple_New(n);
 	for(i = 0; i < n; ++i){
 		PyTuple_SetItem(rv, i,
@@ -1352,6 +1383,7 @@ static PyObject *S4Sim_GetPowerFluxByOrder(S4Sim *self, PyObject *args, PyObject
 			)
 		);
 	}
+        */
 	free(power);
 	return rv;
 }
@@ -1495,15 +1527,65 @@ static PyObject *S4Sim_GetFieldsByLevel(S4Sim *self, PyObject *args, PyObject *k
 		return NULL;
 	}
 
-	obj = PyList_New(numOfLevels); 
-	
+	obj = PyList_New(numOfLevels);
+
+	for(int i = 0; i < numOfLevels; i++) {
+                Py_complex *p1 = PyComplex_FromDoubles(*(efieldByLevel + 0 + i * 6), *(efieldByLevel + 1 + i * 6));
+                Py_complex *p2 = PyComplex_FromDoubles(*(efieldByLevel + 2 + i * 6), *(efieldByLevel+ 3 + i * 6));
+                Py_complex *p3 = PyComplex_FromDoubles(*(efieldByLevel + 4 + i * 6), *(efieldByLevel + 5 + i * 6));
+
+
+                Py_complex *p4 = PyComplex_FromDoubles(*(hfieldByLevel + 0 + i * 6), *(efieldByLevel + 1 + i * 6));
+                Py_complex *p5 = PyComplex_FromDoubles(*(hfieldByLevel + 2 + i * 6), *(efieldByLevel+ 3 + i * 6));
+                Py_complex *p6 = PyComplex_FromDoubles(*(hfieldByLevel + 4 + i * 6), *(efieldByLevel + 5 + i * 6));
+
+                PyObject *pack1 =     PyTuple_Pack(3,
+				p1,//PyComplex_FromDoubles(*(efieldByLevel + 0 + i * 6), *(efieldByLevel + 1 + i * 6)),
+				p2,//PyComplex_FromDoubles(*(efieldByLevel + 2 + i * 6), *(efieldByLevel+ 3 + i * 6)),
+				p3//PyComplex_FromDoubles(*(efieldByLevel + 4 + i * 6), *(efieldByLevel + 5 + i * 6))
+			);
+
+                 PyObject *pack2 =      PyTuple_Pack(3,
+				p4,//PyComplex_FromDoubles(*(hfieldByLevel + 0 + i * 6), *(hfieldByLevel + 1 + i * 6)),
+				p5,//PyComplex_FromDoubles(*(hfieldByLevel + 2 + i * 6), *(hfieldByLevel + 3 + i * 6)),
+				p6//PyComplex_FromDoubles(*(hfieldByLevel + 4 + i * 6), *(hfieldByLevel + 5 + i * 6))
+			);
+
+		PyList_SetItem(obj, i, PyTuple_Pack(2,pack1,pack2
+                        /*
+                        PyTuple_Pack(3,
+				p1,//PyComplex_FromDoubles(*(efieldByLevel + 0 + i * 6), *(efieldByLevel + 1 + i * 6)),
+				p2,//PyComplex_FromDoubles(*(efieldByLevel + 2 + i * 6), *(efieldByLevel+ 3 + i * 6)),
+				p3//PyComplex_FromDoubles(*(efieldByLevel + 4 + i * 6), *(efieldByLevel + 5 + i * 6))
+			),
+
+			PyTuple_Pack(3,
+				p4,//PyComplex_FromDoubles(*(hfieldByLevel + 0 + i * 6), *(hfieldByLevel + 1 + i * 6)),
+				p5,//PyComplex_FromDoubles(*(hfieldByLevel + 2 + i * 6), *(hfieldByLevel + 3 + i * 6)),
+				p6//PyComplex_FromDoubles(*(hfieldByLevel + 4 + i * 6), *(hfieldByLevel + 5 + i * 6))
+			)*/
+		) );
+                Py_DECREF(p1);
+                Py_DECREF(p2);
+                Py_DECREF(p3);
+                Py_DECREF(p4);
+                Py_DECREF(p5);
+                Py_DECREF(p6);
+
+                Py_DECREF(pack1);
+                Py_DECREF(pack2);
+	}
+
+        /*
 	for(int i = 0; i < numOfLevels; i++) { 
 		PyList_SetItem(obj, i, PyTuple_Pack(2,
-			PyTuple_Pack(3,
+
+                        PyTuple_Pack(3,
 				PyComplex_FromDoubles(*(efieldByLevel + 0 + i * 6), *(efieldByLevel + 1 + i * 6)),
 				PyComplex_FromDoubles(*(efieldByLevel + 2 + i * 6), *(efieldByLevel+ 3 + i * 6)),
 				PyComplex_FromDoubles(*(efieldByLevel + 4 + i * 6), *(efieldByLevel + 5 + i * 6))
 			),
+
 			PyTuple_Pack(3,
 				PyComplex_FromDoubles(*(hfieldByLevel + 0 + i * 6), *(hfieldByLevel + 1 + i * 6)),
 				PyComplex_FromDoubles(*(hfieldByLevel + 2 + i * 6), *(hfieldByLevel + 3 + i * 6)),
@@ -1511,6 +1593,7 @@ static PyObject *S4Sim_GetFieldsByLevel(S4Sim *self, PyObject *args, PyObject *k
 			)
 		) );
 	}
+        */
 
 	free(efieldByLevel);
 	free(hfieldByLevel);
