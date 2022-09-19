@@ -19,34 +19,34 @@
 #  For example to use blas/lapack or even mkl installed in a anaconda conda environment:
 # BLAS_LIB = -L$(CONDA_PREFIX)/lib/ -lmkl_core -lmkl_rt -lstdc++ -lpthread -lm -ldl
 # LAPACK_LIB = -L$(CONDA_PREFIX)/lib/ -lmkl_core -lmkl_rt -lstdc++ -lpthread -lm -ldl
-BLAS_LIB = -lblas
-LAPACK_LIB = -llapack
+# BLAS_LIB = -lblas
+#LAPACK_LIB = -llapack
 
 # Specify the flags for Lua headers and libraries (only needed for Lua frontend)
 # Recommended: build lua in the current directory, and link against this local version
 # LUA_INC = -I./lua-5.2.4/install/include
 # LUA_LIB = -L./lua-5.2.4/install/lib -llua -ldl -lm
-LUA_INC = -I./lua-5.2.4/install/include
-LUA_LIB = -L./lua-5.2.4/install/lib -llua -ldl -lm
+# LUA_INC = -I./lua-5.2.4/install/include
+# LUA_LIB = -L./lua-5.2.4/install/lib -llua -ldl -lm
 
 # OPTIONAL
 # Typically if installed,
 #  FFTW3_INC can be left empty
-#  FFTW3_LIB = -lfftw3 
+#  FFTW3_LIB = -lfftw3
 #  or, if Fedora and/or fftw is version 3 but named fftw rather than fftw3
-#  FTW3_LIB = -lfftw 
+#  FTW3_LIB = -lfftw
 #  May need to link libraries properly as with blas and lapack above
 # FFTW3_INC = -I$(CONDA_PREFIX)/include/
 # FFTW3_LIB = -L$(CONDA_PREFIX)/lib/ -lfftw3
-FFTW3_INC =
-FFTW3_LIB = -lfftw3
+# FFTW3_INC =
+# FFTW3_LIB = -lfftw3
 
 # Typically,
 #  PTHREAD_INC = -DHAVE_UNISTD_H
 #  PTHREAD_LIB = -lpthread
 # If conda env
 # PTHREAD_LIB = -L$(CONDA_PREFIX)/lib/ -lpthread
-PTHREAD_INC = -DHAVE_UNISTD_H
+# PTHREAD_INC = -DHAVE_UNISTD_H
 #PTHREAD_LIB = -lpthread
 
 # OPTIONAL
@@ -58,8 +58,8 @@ PTHREAD_INC = -DHAVE_UNISTD_H
 # Alternate Example: I compiled and istalled SuiteSpares in the directory above this S4 directory
 # CHOLMOD_INC = -I../SuiteSparse/include/
 # CHOLMOD_LIB = -L../SuiteSparse/lib/ -lcholmod -lamd -lcolamd -lcamd -lccolamd
-CHOLMOD_INC = -I/usr/include/suitesparse
-CHOLMOD_LIB = -lcholmod -lamd -lcolamd -lcamd -lccolamd
+# CHOLMOD_INC = -I/usr/include/suitesparse
+# CHOLMOD_LIB = -lcholmod -lamd -lcolamd -lcamd -lccolamd
 
 # Specify the MPI library
 # For example, on Fedora: dnf  install openmpi-devel
@@ -71,7 +71,7 @@ CHOLMOD_LIB = -lcholmod -lamd -lcolamd -lcamd -lccolamd
 #MPI_LIB = -L/usr/lib64/openmpi/lib/libmpi.so
 
 # Enable S4_TRACE debugging
-# values of 1, 2, 3 enable debugging, with verbosity increasing as 
+# values of 1, 2, 3 enable debugging, with verbosity increasing as
 # value increases. 0 to disable
 S4_DEBUG = 0
 S4_PROF = 0
@@ -91,9 +91,9 @@ S4_BINNAME = $(OBJDIR)/S4
 S4_LIBNAME = $(OBJDIR)/libS4.a
 S4r_LIBNAME = $(OBJDIR)/libS4r.a
 
-#### Download, compile, and install boost serialization lib. 
+#### Download, compile, and install boost serialization lib.
 #### This should all work fine, you must modify BOOST_INC, BOOST_LIBS,
-#### and PREFIX if you want to install boost to a different location 
+#### and PREFIX if you want to install boost to a different location
 
 # Specify the paths to the boost include and lib directories
 BOOST_PREFIX=${CURDIR}/S4
@@ -106,7 +106,7 @@ $(BOOST_FILE):
 	wget $(BOOST_URL) -O $(BOOST_FILE)
 
 # Target for extracting boost from archive and compiling. Depends on download target above
-${CURDIR}/S4/lib: $(BOOST_FILE)  
+${CURDIR}/S4/lib: $(BOOST_FILE)
 	$(eval BOOST_DIR := $(shell tar tzf $(BOOST_FILE) | sed -e 's@/.*@@' | uniq))
 	@echo Boost dir is $(BOOST_DIR)
 	tar -xzvf $(BOOST_FILE)
@@ -120,32 +120,32 @@ boost: $(BOOST_PREFIX)/lib
 
 #### Set the compilation flags
 
-CPPFLAGS = -Wall -I. -IS4 -IS4/RNP -IS4/kiss_fft 
- 
+CPPFLAGS = -Wall -I. -IS4 -IS4/RNP -IS4/kiss_fft
+
 ifeq ($(S4_PROF), 1)
 CPPFLAGS += -g -pg
 endif
 
 ifeq ($(S4_DEBUG), 1)
-CPPFLAGS += -ggdb 
+CPPFLAGS += -ggdb
 endif
 
 ifeq ($(S4_DEBUG), 2)
 CPPFLAGS += -DENABLE_S4_TRACE
-CPPFLAGS += -ggdb 
+CPPFLAGS += -ggdb
 endif
 
 ifeq ($(S4_DEBUG), 3)
 CPPFLAGS += -DENABLE_S4_TRACE
 CPPFLAGS += -DDUMP_MATRICES
-CPPFLAGS += -ggdb 
+CPPFLAGS += -ggdb
 endif
 
 ifeq ($(S4_DEBUG), 4)
 CPPFLAGS += -DENABLE_S4_TRACE
 CPPFLAGS += -DDUMP_MATRICES
 CPPFLAGS += -DDUMP_MATRICES_LARGE
-CPPFLAGS += -ggdb 
+CPPFLAGS += -ggdb
 endif
 
 ifdef BOOST_INC
@@ -162,7 +162,6 @@ CPPFLAGS += -DHAVE_LAPACK
 endif
 
 ifdef FFTW3_LIB
-CPPFLAGS += -DHAVE_FFTW3 $(FFTW3_INC)
 endif
 
 ifdef PTHREAD_LIB
