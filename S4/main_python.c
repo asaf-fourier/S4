@@ -187,7 +187,7 @@ typedef struct{
 typedef struct
 {
 	PyObject_HEAD
-	Interpolator I;
+	Interpolator Intrp;
 }S4Interpolator;
 
 typedef struct
@@ -566,7 +566,7 @@ static PyObject *S4Interpolator_new(PyTypeObject *type, PyObject *args, PyObject
 			free(interData.xy); interData.xy = NULL;
 			return NULL;
 		}
-		self->I = Interpolator_New(interData.n, interData.ny, interData.xy, inter_type);
+		self->Intrp= Interpolator_New(interData.n, interData.ny, interData.xy, inter_type);
 	}
 	free(interData.xy); interData.xy = NULL;
 	return (PyObject*)self;
@@ -581,7 +581,7 @@ static PyObject *S4Interpolator_Get(S4Interpolator *self, PyObject *args, PyObje
 	PyObject *ret;
 	if(!PyArg_ParseTupleAndKeywords(args, kwds, "d:Get", kwlist, &x))
 		return NULL;
-	ys = Interpolator_Get(self->I, x, &ny);
+	ys = Interpolator_Get(self->Intrp, x, &ny);
 	if(NULL == ys)
 		Py_RETURN_NONE;
 	ret = PyTuple_New(ny);
@@ -645,7 +645,7 @@ static void S4Sim_dealloc(S4Sim* self){
 
 static void S4Interpolator_dealloc(S4Interpolator *self)
 {
-	Interpolator_Destroy(self->I);
+	Interpolator_Destroy(self->Intrp);
 	Py_TYPE(self)->tp_free((PyObject*) self);
 }
 
@@ -1577,7 +1577,7 @@ static PyObject *S4Sim_GetFieldsByLevel(S4Sim *self, PyObject *args, PyObject *k
 	}
 
         /*
-	for(int i = 0; i < numOfLevels; i++) { 
+	for(int i = 0; i < numOfLevels; i++) {
 		PyList_SetItem(obj, i, PyTuple_Pack(2,
 
                         PyTuple_Pack(3,
@@ -1597,7 +1597,7 @@ static PyObject *S4Sim_GetFieldsByLevel(S4Sim *self, PyObject *args, PyObject *k
 
 	free(efieldByLevel);
 	free(hfieldByLevel);
-	
+
 	return obj;
 }
 
@@ -1614,7 +1614,7 @@ static PyObject *S4Sim_GetFieldsByLayerName(S4Sim *self, PyObject *args, PyObjec
 	int numOfLevels = 0;
 
 	static char* kwlist[] = { "Layer", NULL };
-    	
+
   	if (!PyArg_ParseTupleAndKeywords(args, kwds, "s:GetFields", kwlist, &layername)) {
     	return NULL;
   	}
@@ -1629,19 +1629,19 @@ static PyObject *S4Sim_GetFieldsByLayerName(S4Sim *self, PyObject *args, PyObjec
 		HandleSolutionErrorCode("GetFields", ret);
 		return NULL;
 	}
-	
-	obj = PyList_New(2); 
-	objE = PyList_New(numOfLevels); 
-	objH = PyList_New(numOfLevels); 
-	
-	for(int i = 0; i < numOfLevels; i++) { 
-		PyList_SetItem(objE, i, 
+
+	obj = PyList_New(2);
+	objE = PyList_New(numOfLevels);
+	objH = PyList_New(numOfLevels);
+
+	for(int i = 0; i < numOfLevels; i++) {
+		PyList_SetItem(objE, i,
 			PyTuple_Pack(3,
 				PyComplex_FromDoubles(*(efieldByLevel + 0 + i * 6), *(efieldByLevel + 1 + i * 6)),
 				PyComplex_FromDoubles(*(efieldByLevel + 2 + i * 6), *(efieldByLevel+ 3 + i * 6)),
 				PyComplex_FromDoubles(*(efieldByLevel + 4 + i * 6), *(efieldByLevel + 5 + i * 6))
 			));
-		
+
 		PyList_SetItem(objH, i,
 			PyTuple_Pack(3,
 				PyComplex_FromDoubles(*(hfieldByLevel + 0 + i * 6), *(hfieldByLevel + 1 + i * 6)),
@@ -1655,7 +1655,7 @@ static PyObject *S4Sim_GetFieldsByLayerName(S4Sim *self, PyObject *args, PyObjec
 
 	free(efieldByLevel);
 	free(hfieldByLevel);
-	
+
 	return obj;
 }
 
