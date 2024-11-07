@@ -1079,11 +1079,19 @@ static PyObject *S4Sim_GetSimulationDetails(S4Sim *self, PyObject *args){
         PyList_SetItem(ky_py, i, PyFloat_FromDouble(ky[i]));
     }
 
+    //UK, 07NOV2024
+    //allocating omeges for further decref to prevent memory leak
+    PyObject *omegas =  PyComplex_FromDoubles(omega[0], omega[1]);
     out = PyTuple_Pack(3,
 				kx_py,
 				ky_py,
-				PyComplex_FromDoubles(omega[0], omega[1])
+                omegas
 			);
+	//UK, 07NOV2024
+    //decref to prevent memory leak
+    Py_DECREF(omegas);
+    Py_DECREF(kx_py);
+    Py_DECREF(ky_py);
 
     free(kx);
     free(ky);
