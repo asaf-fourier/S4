@@ -81,7 +81,12 @@ CXX = g++
 CC  = gcc
 
 #CFLAGS += -O3 -fPIC
-CFLAGS = -Wall -O3 -m64 -march=native -mtune=native -msse3 -msse2 -msse -fPIC
+
+#Intel
+#CFLAGS = -Wall -O3 -m64 -march=native -mtune=native -msse3 -msse2 -msse -fPIC
+
+#ARM
+CFLAGS = -Wall -O3 -march=armv8-a -mtune=native -fPIC
 
 # options for Sampler module
 OPTFLAGS = -O3
